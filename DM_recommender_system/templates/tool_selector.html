@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tool selector</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(function() {
+            // function for when the submit button is pressed
+            $('#submit1').click(function (event) {
+                // prevent form from submitting itself
+                event.preventDefault();
+                var frm = $('#form1')                                                   // set the form to a variable
+                var option = $('#toolSelect').val()                                     // set the selected tool to a variable
+                var res_limit = $("input:radio[name='res_limit']:checked").val()        // set the results limit to a variable
+
+                // use AJAX to send the form data to the server
+                     $.ajax({
+                        type : frm.attr('method'),
+                        url : frm.attr('action'),
+                        data: { 'tool': option, 'res_limit': res_limit}
+                        }).done(function(data) {
+                            // if success, return the data and place inside the content div
+                            $('#content').html(data)
+                         }).fail(function(data) {
+                             // else let the user know there was an error
+                             alert('There was an error retrieving the information')
+                        })
+            });
+        })
+    </script>
+</head>
+<body>
+    <a href="/">Return to main page</a>
+    <h1>Tool Selector</h1>
+    <div id="content"></div>
+    <br>
+    <p>Select a tool from the list and press submit to see similar tools</p>
+    <form id="form1" method="POST" action="/tool/">
+        <label>Select tool</label>
+        <select id="toolSelect" class="selector">
+            <option value="Excel">Excel</option>
+            <option value="Hadoop">Hadoop</option>
+            <option value="KNIME">KNIME</option>
+            <option value="Python">Python</option>
+            <option value="R">R</option>
+            <option value="RapidMiner">RapidMiner</option>
+            <option value="SAS">SAS</option>
+            <option value="Spark">Spark</option>
+            <option value="SQL">SQL Server</option>
+            <option value="Tableau">Tableau</option>
+        </select>
+        <br><br>
+        <label>Limit Results to</label>
+        <span class="selector">
+        <input type="radio" name="res_limit" value="3">3
+        <input type="radio" name="res_limit" value="6">6
+        <input type="radio" name="res_limit" value="9" checked="checked">No limit
+        </span>
+        <br><br>
+        <input type="submit" value="Submit" id="submit1">
+    </form>
+</body>
+</html>

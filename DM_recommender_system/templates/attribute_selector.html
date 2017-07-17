@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attribute selector</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+		<script type=text/javascript>
+			$(function() {
+			    // reset the form when reset button is pressed
+                $('#reset').click(function () {
+                    $("#form1")[0].reset();
+                });
+                // function for when submit button is pressed
+                $('#submit1').click(function (event) {
+                    // prevent the form from submitting itself
+                    event.preventDefault();
+                    // count the number of radio buttons that are selected
+                    checked = $('input[type=radio]:checked').size()
+                    // check that more than one are selected
+                    if (checked == 1) {
+                        alert('Please select at least one option')
+                    }
+                    else {
+                        var frm = $('#form1');                          // set the form to a variable
+                        var f_data = frm.serialize()                    // gather all the form data
+                        // use AJAX to send the form data to the server
+                        $.ajax({
+                        type : frm.attr('method'),
+                        url : frm.attr('action'),
+                        data: { 'data': f_data }
+                        }).done(function(data) {
+                            // if success, return the data and place inside the content div
+                            $('#content').html(data)
+                         }).fail(function(data) {
+                             // else let user know there was an error
+                             alert('There was an error retrieving the information')
+                        })
+                    }
+                });
+    })
+		</script>
+</head>
+<body>
+<a href="/">Return to main page</a>
+<h1>Attribute Selector</h1>
+<div id="content"></div>
+<br>
+<p>Select the attributes as you want and press submit to see your recommended tools
+    <br><b>Hint: Hover over a label to get more information </b></p>
+    <form id="form1" method="POST" action="/attribute/">
+        <br>
+        <label class="tooltip">Free <span class="tooltiptext">Is it free to download and install</span></label>
+        <span class="selector">
+        <input type="radio" name="Free" value="yes">Yes
+        <input type="radio" name="Free" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">Open source <span class="tooltiptext">Is the source code available to the public</span></label>
+        <span class="selector">
+        <input type="radio" name="Open_source" value="yes">Yes
+        <input type="radio" name="Open_source" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">Community <span class="tooltiptext">Does it have an online community to offer help and support</span></label>
+        <span class="selector">
+        <input type="radio" name="Community" value="yes">Yes
+        <input type="radio" name="Community" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">GUI <span class="tooltiptext">Does it have a Graphical User Interface</span></label>
+        <span class="selector">
+        <input type="radio" name="GUI" value="yes">Yes
+        <input type="radio" name="GUI" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">Graphs <span class="tooltiptext">Can it be used for making graphs and other visualizations</span></label>
+        <span class="selector">
+        <input type="radio" name="Graphs" value="yes">Yes
+        <input type="radio" name="Graphs" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">Scalable <span class="tooltiptext">Does it perform well over a large volume</span></label>
+        <span class="selector">
+        <input type="radio" name="Scalable" value="yes">Yes
+        <input type="radio" name="Scalable" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">ETL <span class="tooltiptext">Can it be used for Extract Transform Load database operations</span></label>
+        <span class="selector">
+        <input type="radio" name="ETL" value="yes">Yes
+        <input type="radio" name="ETL" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">Text Mining <span class="tooltiptext">Can it be used to form patterns from text data</span></label>
+        <span class="selector">
+        <input type="radio" name="Text_Mining" value="yes">Yes
+        <input type="radio" name="Text_Mining" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">Predictive <span class="tooltiptext">Can it be used for predicting future events</span></label>
+        <span class="selector">
+        <input type="radio" name="Predictive" value="yes">Yes
+        <input type="radio" name="Predictive" value="no">No
+        </span>
+        <br>
+        <label class="tooltip">Data Mining Algorithms <span class="tooltiptext">Can it be used for Classification, Regression, Clustering and Association Rules</span></label>
+        <span class="selector">
+        <input type="radio" name="Algorithms" value="no">No
+        <input type="radio" name="Algorithms" value="yes">Yes
+        </span>
+        <br><br>
+        <label>Limit Results to</label>
+        <span class="selector">
+        <input type="radio" name="res_limit" value="3">3
+        <input type="radio" name="res_limit" value="6">6
+        <input type="radio" name="res_limit" value="10" checked="checked">No limit
+        </span>
+        <br><br>
+        <input id="submit1" type="submit" value="Submit">
+    </form>
+        <button id="reset">Reset Form</button>
+</body>
+</html>
