@@ -1,0 +1,11 @@
+<select id="endYear">
+    <!-- first option has no value. Make it selected by default -->
+    <option value="" selected="selected"></option>
+    <!-- for each year from 1890 up to 2000 set an option for that year with value set to the year -->
+    <!-- If endyear parameter is set to this year then select this option -->
+    {% for year in range(1890, 2001) %}
+        <option value={{ year }}
+                        {% if request.args.get("endyear") == year|string %} selected="selected"
+                        {% endif %}>{{ year }}</option>
+    {% endfor %}
+</select>

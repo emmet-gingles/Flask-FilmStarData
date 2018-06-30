@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <title>Film Stars</title>
+        <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+        <script type="text/javascript">
+        $(document).ready(function() {
+             // function that takes a date as input and outputs it in the format - month date, year
+             function formatDate(date) {
+                 var months = new Array("January","February","March","April","May","June","July","August","September","October","November","December");
+                 var d = date.getDate();
+                 var m = months[date.getMonth()];
+                 var y = date.getFullYear();
+                 var newDate = m + " " + d + ", " + y;
+                 return newDate;
+             }
+
+             // function that checks that a year has been selected
+             function validYear(startYear, endYear){
+                    // if no start year is selected - return False
+                    if (startYear == ""){
+                        alert("Please select a start year");
+                        return false;
+                    }
+                    // if no end year is selected - return False
+                    else if (endYear == ""){
+                        alert("Please select an end year");
+                        return false;
+                    }
+                    // if the start year is greater than the end year - return False
+                    else if(startYear > endYear){
+                       alert("Start year cannot be greater than end year");
+                       return false;
+                     }
+                     // else both years are valid - return True
+                     else {
+                         return true;
+                     }
+             }
+
+             // function that retrieves data from database and displays it on webpage
+             function listData(offset){
+                        // four variables for the value of each radio button group
+                        var order = $("input:radio[name='order']:checked").val();
+                        var sort = $("input:radio[name='sort']:checked").val();
+                        var status = $("input:radio[name='status']:checked").val();
+                        var type = $("input:radio[name='type']:checked").val();
+
+                        var form = $("#form1")
+                        // input values of text fields
+                        var fname = $("#fname").val();
+                        var lname = $("#lname").val();
+                        var yearsSelected = false;
+                        // selected value of dropdown menus
+                        var startYear = $("#startYear").val()
+                        var endYear = $("#endYear").val()
+
+                        // check that a year has been selected from both drop down menus
+                        if (startYear.length >= 4 || endYear.length >= 4){
+                            // check that end year is greater than start year
+                            if (!validYear(startYear, endYear)){
+                                return;
+                            }
+                            else{
+                                yearsSelected = true;
+                            }
+                        }
+
+                        // if searching for a firstname and a lastname
+                        if (fname !== "" && lname !== ""){
+                            // if start and end year are set - include them in search query
+                            if (yearsSelected) {
+                               data = {'order': order, 'sort': sort, 'status': status, 'type': type, 'offset': offset,
+                                   'firstname' : fname, 'lastname' : lname, 'startyear' : startYear, 'endyear' : endYear};
+                            }
+                            // else dont include them
+                            else{
+                                data = {'order': order, 'sort': sort, 'status': status, 'type': type, 'offset': offset,
+                                'firstname' : fname, 'lastname' : lname};
+                            }
+                        }
+                        // if searching just by a firstname
+                        else if (fname !== ""){
+                            if (yearsSelected) {
+                            data = {'order': order, 'sort': sort, 'status': status, 'type': type, 'offset': offset,
+                                'firstname' : fname, 'startyear' : startYear, 'endyear' : endYear};
+                            }
+                            else{
+                                data = {'order': order, 'sort': sort, 'status': status, 'type': type, 'offset': offset,
+                                    'firstname' : fname};
+                            }
+                        }
+                        // if searching just by lastname
+                        else if (lname !== ""){
+                            if (yearsSelected) {
+                            data = {'order': order, 'sort': sort, 'status': status, 'type': type, 'offset': offset,
+                                'lastname' : lname, 'startyear' : startYear, 'endyear' : endYear};
+                            }
+                            else{
+                              data = {'order': order, 'sort': sort, 'status': status, 'type': type, 'offset': offset,
+                                  'lastname' : lname};
+                            }
+                        }
+                        // otherwise not searching for any string - just use radio buttons
+                        else{
+                            // if start and end year are set - include them in search query
+                            if (yearsSelected) {
+                            data = {'order': order, 'sort': sort, 'status': status, 'type': type, 'offset': offset,
+                             'startyear' : startYear, 'endyear' : endYear};
+                            }
+                            else{
+                                data = {'order': order, 'sort': sort, 'status': status, 'type': type, 'offset': offset};
+                            }
+                        }
+
+                        // use AJAX to call Film_stars.py, pass in the form data and get the resulting data back
+                        $.ajax({
+                            type : form.attr('method'),
+                            url : form.attr('action'),
+                            data: data,
+                            contentType: 'application/json'
+                            })
+                            // successful request
+                            .success(function(results){
+                                // clear the div of any existing data
+                                $("#content").empty();
+                                // total number of results
+                                var length = results.total;
+                                if (length > 0) {
+                                    // show the total number of results
+                                    $("#resultsTotal").text(length + " results found");
+                                    // if offset is greater than 10 then show previous button
+                                    if (results.offset >= 10) {
+                                        $("#previous").css("display", "inline");
+                                    }
+                                    // else hide the previous button
+                                    else{
+                                        $("#previous").css("display", "none");
+                                    }
+                                    // if offset + 10 is less than total number of results then show next button
+                                    if (results.offset + 10 < results.total) {
+                                        $("#next").css("display", "inline");
+                                    }
+                                    // else hide the next button
+                                    else{
+                                        $("#next").css("display", "none");
+                                    }
+
+                                    var html = "";
+                                    var i = 0;
+                                    // loop through results set and show the data
+                                    for (i in results.data) {
+                                        // get the date of birth and call function to change format
+                                        var date = new Date(results.data[i]['date of birth']);
+                                        var newDate = formatDate(date);
+                                        // place results variables inside html tags for display purposes
+                                        html = "<div><b>Name:</b> " + results.data[i]['name'] + "<br/> <b>Date of birth:</b> "
+                                            + newDate;
+                                        died = results.data[i]['date of death'];
+                                        // if they are deceased we also want to show when they died - append to html
+                                        if (died != undefined) {
+                                            var date = new Date(died);
+                                            var newDate = formatDate(date);
+                                            html = html + "<br/> <b>Date of death:</b> "
+                                                + newDate;
+                                        }
+                                        // close tags for html
+                                        html = html + "</div> <br/>";
+                                        // append all of the html content to the content div
+                                        $("#content").append(html);
+                                    }
+                                }
+                                // if no results found - inform the user
+                                else{
+                                    $("#resultsTotal").text("No results found");
+                                }
+                            })
+                            // if request failed
+                            .fail(function(data) {
+                                 // else let the user know there was an error
+                                 alert('There was an error retrieving the information')
+                            })
+             }
+
+             // if submit button is pressed
+            $('#submit').click(function (event) {
+                // prevent the form from submitting itself
+                event.preventDefault();
+                // set default value of 1 for the page
+                $("#page").val(1);
+                // call function
+                listData(0);
+            });
+
+             // if reset button is pressed
+             $('#reset').click(function (event) {
+                 event.preventDefault();
+                 // set both drop down menus to their first option
+                 $("#startYear").val($("#startYear option:first").val());
+                 $("#endYear").val($("#endYear option:first").val());
+                 // set both text fields to null
+                 $("#fname").val("");
+                 $("#lname").val("");
+             });
+
+             // if button of the class pageButtons is pressed
+            $(document).on("click", '.pageButtons', function (event) {
+                // retrieve current page number from hidden attribute at bottom of page
+                var page = parseInt($("#page").val());
+                // if previous button was pressed then subtract one from page number
+                if (this.id == "previous") {
+                    page = page - 1;
+                }
+                // else if next button was pressed then add one to page number
+                else if (this.id == "next") {
+                    page = page + 1;
+                }
+                // set the hidden attribute to the new page number
+                $("#page").val(page);
+
+                // calculate the offset - 10 is the number of results per page
+                var offset = (page * 10) - 10;
+
+                // call function using offset as parameter
+                listData(offset);
+            });
+
+            // show cursor whenever mouse hovers over previous or next buttons
+            $(document).on("mouseenter", '.pageButtons', function (event) {
+                $(this).css('cursor', 'pointer');
+            })
+        });
+
+        </script>
+    </head>
+
+    <body>
+        <form id="form" method="GET" action="/">
+            <div class="search">
+                <label>Search for: </label>
+                <!-- This radio button is checked by default -->
+                <input type="radio" name="type" value="actors" checked="checked"><span>Actors</span>
+                <!-- If type parameter is set to this then check radio button -->
+                <input type="radio" name="type" value="actresses"
+                        {% if request.args.get('type') == 'actresses' %} checked="checked"
+                        {% endif %} ><span>Actresses</span>
+                <input type="radio" name="type" value="directors"
+                        {% if request.args.get('type') == 'directors' %} checked="checked"
+                        {% endif %}><span>Directors</span>
+                <br/><label>Filter by status: </label>
+                <!-- If status parameter is set to this then check radio button -->
+                <input type="radio" name="status" value="living"
+                        {% if request.args.get('status') == 'living' %} checked="checked"
+                        {% endif %} ><span>Living</span>
+                <input type="radio" name="status" value="deceased"
+                        {% if request.args.get('status') == 'deceased' %} checked="checked"
+                        {% endif %}><span>Deceased</span>
+                <input type="radio" name="status" value="all"
+                        {% if request.args.get('status') == 'all' or not request.args.get('status') %} checked="checked"
+                        {% endif %}><span>All</span>
+                <br/><label>Order by: </label>
+                <!-- If order parameter is set to this then check radio button -->
+                <input type="radio" name="order" value="firstname"
+                        {% if request.args.get('order') == 'firstname' %} checked="checked"
+                        {% endif %}><span>Firstname</span>
+                <input type="radio" name="order" value="lastname"
+                        {% if request.args.get('order') == 'lastname' or not request.args.get('order') %} checked="checked"
+                        {% endif %}><span>Lastname</span>
+                <input type="radio" name="order" value="date"
+                        {% if request.args.get('order') == 'date' %} checked="checked"
+                        {% endif %}><span>Date of birth</span>
+                <br/><label>Show results in: </label>
+                <input type="radio" name="sort" value="asc" checked="checked"><span>Ascending order</span>
+                <!-- If sort parameter is set to this then check radio button -->
+                <input type="radio" name="sort" value="desc"
+                        {% if request.args.get('sort') == 'desc' %} checked="checked"
+                        {% endif %}><span>Descending order</span>
+                <br/>
+            </div>
+            <div class="advancedSearch">
+                <h2>Advanced Search</h2>
+                <!-- If firstname parameter is set then set it to the value of the text field -->
+                <label for="fname">First name: </label><input type="text" id="fname"
+                        {%  if request.args.get('firstname') %} value={{ request.args.get('firstname') }}
+                        {% endif %}>
+                <!-- If lastname parameter is set then set it to the value of the text field -->
+                <br><label for="lname">Last name: </label><input type="text" id="lname"
+                        {%  if request.args.get('lastname') %} value={{ request.args.get('lastname') }}
+                        {% endif %}>
+                <br><label>Born between: </label>
+                <!-- include content from these pages -->
+                {% include 'startYear.html' %}
+                {% include 'endYear.html' %}
+                <br><button id="reset">Reset</button>
+            </div>
+            <span class="formButtons">
+                <input type="submit" value="Submit" id="submit">
+            </span>
+        </form>
+
+        {% block body %}
+            <!-- If the total result is greater than zero show the number -->
+            <p id="resultsTotal">{% if total > 0 %}{{ total }} results found
+            {% else %} No results found
+            {% endif %}
+            </p>
+            <!-- Buttons to navigate from one results page to the next -->
+            <div id="pageNav">
+                <a id="previous" class="pageButtons">Previous</a>&nbsp;
+                <a id="next" class="pageButtons">Next</a>
+            </div>
+            <div id="content">
+                <!-- loop through results set -->
+                {% for actor in data %}
+                <div>
+                    <!-- split the date into a list -->
+                    {% set date = actor['date of birth'].isoformat().split("T")  %}
+                    <!-- specify the year, month and date for each position in the list -->
+                    {% set year = date[0][0:4] %}
+                    {% set month = date[0][5:7] %}
+                    {% set date = date[0][8:10] %}
+                    <b>Name: </b> {{ actor['name'] }}
+                    <!-- If year is greater than 1900 then we can call strftime function -->
+                    <br/>
+                    {% if year|int >= 1900 %}
+                        <b>Date of birth: </b> {{ actor['date of birth'].strftime('%B %#d, %Y') }}
+                    <!-- else year is less than 1900 so we need to call the function from Film_stars.py -->
+                    {% else %}
+                        <b>Date of birth: </b> {{ formatDate(date, month, year) }}
+                    {% endif %}
+                    <!-- if date of death is there then show it using strftime -->
+                    {% if actor['date of death'] %}
+                    <br/> <b>Date of death: </b>{{ actor['date of death'].strftime('%B %#d, %Y') }}
+                    {% endif %}
+                </div> <br/>
+                {% endfor %}
+            {% endblock %}
+        </div>
+        <!-- hidden attribute used to store the current page of the results set -->
+        <!-- If offset is in results.args then set it to variable. Use this to calculate page variable and set this to tag value -->
+        <!-- If offset is not set in results.args then default value is set to 1 -->
+        <input id="page" type="hidden"
+                {% if request.args.get('offset') %}
+                    {% set offset = request.args.get('offset')|int %}
+                    {% set page = offset/10 %}
+                    value={{ page }}
+                {% else %} value="1">
+                {% endif %}
+
+    </body>
+</html>
